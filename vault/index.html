@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Vault</title>
+  <meta name="description" content="Come closer. There are things hidden here." />
+  <meta name="theme-color" content="#050506" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/vault.css">
+</head>
+
+<body class="bg-void vault-body">
+  <!-- atmosphere layers -->
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ambient audio (user-triggered only) -->
+  <audio id="ambience" src="/assets/audio/aura.mp3" preload="auto" loop></audio>
+
+  <!-- toast messages -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- inventory -->
+  <aside class="inventory" aria-label="Your artifacts">
+    <div class="inv-header">
+      <div class="inv-title">Artifacts</div>
+      <button id="invToggle" class="inv-toggle" aria-expanded="false" aria-controls="invList">
+        open
+      </button>
+    </div>
+    <div id="invList" class="inv-list" hidden></div>
+    <div class="inv-foot">collect & unlock</div>
+  </aside>
+
+  <!-- main vault -->
+  <main class="vault-stage" aria-label="The Vault">
+    <header class="vault-head">
+      <div class="vault-kicker">welcome to</div>
+      <h1 class="vault-title">The Vault</h1>
+      <div class="vault-sub">take your time. nothing is urgent here.</div>
+    </header>
+
+    <!-- controls -->
+    <section class="controls" aria-label="Vault controls">
+      <button id="atmoBtn" class="ctrl" aria-pressed="false" type="button">
+        atmosphere: off
+      </button>
+      <button id="lightsBtn" class="ctrl" aria-pressed="false" type="button">
+        lights: normal
+      </button>
+    </section>
+
+    <!-- floating artifacts -->
+    <section class="field" aria-label="Discoveries">
+      <a class="artifact a-orchid" href="#" aria-label="The Collection">
+        <span class="glyph">✶</span>
+        <span class="label">the collection</span>
+      </a>
+
+      <a class="artifact a-listen" href="#" aria-label="Listen">
+        <span class="glyph">◌</span>
+        <span class="label">listen</span>
+      </a>
+
+      <a class="artifact a-notes" href="#" aria-label="Notes left behind">
+        <span class="glyph">∿</span>
+        <span class="label">notes left behind</span>
+      </a>
+
+      <a class="artifact a-artifacts" href="#" aria-label="Artifacts">
+        <span class="glyph">△</span>
+        <span class="label">artifacts</span>
+      </a>
+
+      <!-- hidden pulse (easter egg) -->
+      <button id="hiddenPulse" class="pulse" aria-label="(hidden)"></button>
+    </section>
+
+    <footer class="vault-foot">
+      <span class="foot-whisper">if you’re patient, it answers.</span>
+    </footer>
+  </main>
+
+  <!-- JS -->
+  <script src="/assets/js/settings.js"></script>
+  <script src="/assets/js/hunt.js"></script>
+  <script src="/assets/js/vault.js"></script>
+</body>
+</html>
