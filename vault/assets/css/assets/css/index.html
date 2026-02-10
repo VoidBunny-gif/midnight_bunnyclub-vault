@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Babe</title>
+  <meta name="description" content="I left this here for you." />
+  <meta name="theme-color" content="#050506" />
+
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/gate.css">
+</head>
+
+<body class="bg-void gate-body">
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main class="gate">
+    <header class="gate-head">
+      <div class="gate-kicker">for</div>
+      <h1 class="gate-title">Babe</h1>
+      <div id="returnMsg" class="gate-return" hidden>awh, nice to see you again. i’m glad you came.</div>
+    </header>
+
+    <section class="stage" aria-label="Envelope gate">
+      <button id="envelope" class="envelope" type="button" aria-label="Open the envelope">
+        <span class="stamp" aria-hidden="true"></span>
+
+        <span class="env-shadow" aria-hidden="true"></span>
+        <span class="env-back" aria-hidden="true"></span>
+        <span class="env-front" aria-hidden="true"></span>
+        <span class="env-flap" aria-hidden="true"></span>
+
+        <span id="note" class="note" aria-live="polite">
+          <span class="note-text">I left this here for you.</span>
+          <span class="note-sub">click again</span>
+        </span>
+
+        <span class="hint">click</span>
+      </button>
+    </section>
+
+    <footer class="gate-foot">
+      <span class="foot-whisper">enter gently.</span>
+    </footer>
+  </main>
+
+  <div id="fade" class="fade"></div>
+
+  <script src="/assets/js/gate.js"></script>
+</body>
+</html>
