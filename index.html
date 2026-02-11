@@ -6,351 +6,420 @@
   <title>Babe</title>
   <style>
     :root{
-      --bg:#07080b;
-      --paper:#e7e2d8;
-      --paper2:#d9d2c6;
-      --ink:#0b0c10;
-      --muted:rgba(10,10,14,.65);
-      --line:rgba(10,10,14,.22);
-      --glow:rgba(255,255,255,.12);
-      --algiz:rgba(10,10,14,.12);
+      --bg:#07070a;
+      --paper:#f4f1ea;
+      --paper2:#efe9dd;
+      --ink:#111;
+      --muted:#6c6a66;
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --radius: 18px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      background: radial-gradient(1200px 700px at 50% 35%, rgba(255,255,255,.06), transparent 55%),
-                  radial-gradient(900px 600px at 65% 70%, rgba(255,255,255,.04), transparent 60%),
-                  var(--bg);
+      background: radial-gradient(1200px 800px at 50% 38%, #111118 0%, var(--bg) 55%, #050507 100%);
       color:#fff;
-      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
       overflow:hidden;
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
     }
 
-    /* Soft film grain */
-    body::before{
-      content:"";
-      position:fixed; inset:-40%;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
-      mix-blend-mode: overlay;
-      opacity:.10;
-      pointer-events:none;
-      transform:rotate(3deg);
-    }
-
-    .wrap{
+    /* Center stage */
+    .stage{
       height:100%;
       display:grid;
       place-items:center;
       padding:24px;
-    }
-
-    .stage{
-      width:min(720px, 92vw);
-      aspect-ratio: 16 / 10;
       position:relative;
-      display:grid;
-      place-items:center;
-    }
-
-    /* Envelope container */
-    .envelope{
-      width:min(560px, 88vw);
-      aspect-ratio: 5 / 3.1;
-      position:relative;
-      transform-style:preserve-3d;
-      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
-      filter: drop-shadow(0 18px 30px rgba(0,0,0,.55));
-      cursor:pointer;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Flip state (open side down -> flips over) */
-    .envelope.flipped{
-      transform: rotateX(180deg);
-    }
-
-    /* The paper body */
-    .env-body{
-      position:absolute; inset:0;
-      background:
-        radial-gradient(120px 80px at 52% 46%, rgba(255,255,255,.35), transparent 55%),
-        linear-gradient(180deg, var(--paper), var(--paper2));
-      border: 1px solid rgba(0,0,0,.25);
-      border-radius: 14px;
-      overflow:hidden;
-      transform: translateZ(0);
-    }
-
-    /* Embossed Algiz watermark (center, “no ink”) */
-    .env-body::after{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(220px 220px at 50% 52%, rgba(255,255,255,.22), transparent 55%),
-        radial-gradient(180px 180px at 50% 52%, rgba(0,0,0,.08), transparent 62%);
-      mask-image: radial-gradient(260px 260px at 50% 52%, #000 40%, transparent 65%);
-      pointer-events:none;
-    }
-    .algiz{
-      position:absolute;
-      left:50%; top:52%;
-      width:160px; height:160px;
-      transform: translate(-50%,-50%);
-      opacity:.22;
-      filter: blur(.2px);
-      pointer-events:none;
-    }
-    .algiz path{
-      stroke: rgba(10,10,14,.18);
-      stroke-width: 10;
-      fill:none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      filter: drop-shadow(0 1px 0 rgba(255,255,255,.18));
-    }
-
-    /* Envelope flap */
-    .flap{
-      position:absolute;
-      left:0; right:0;
-      top:0;
-      height:60%;
-      background: linear-gradient(180deg, rgba(255,255,255,.25), transparent 55%),
-                  linear-gradient(180deg, var(--paper), var(--paper2));
-      clip-path: polygon(0 0, 100% 0, 50% 100%);
-      transform-origin: 50% 0%;
-      transform: rotateX(0deg);
-      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
-      border-top-left-radius:14px;
-      border-top-right-radius:14px;
-      border: 1px solid rgba(0,0,0,.25);
-      border-bottom:none;
-      z-index:4;
-      backface-visibility:hidden;
-    }
-
-    /* When “opened” */
-    .envelope.opened .flap{
-      transform: rotateX(-165deg);
-    }
-
-    /* Inner letter area */
-    .letter{
-      position:absolute;
-      left:18px; right:18px;
-      top:18px; bottom:18px;
-      border-radius: 12px;
-      border: 1px dashed rgba(0,0,0,.22);
-      background: rgba(255,255,255,.22);
-      display:grid;
-      align-content:start;
-      gap:10px;
-      padding:18px 18px 14px;
       z-index:2;
     }
 
-    .tiny{
-      font-size:14px;
-      color: rgba(0,0,0,.55);
-      letter-spacing:.02em;
-    }
-
-    .title{
-      font-size:54px;
-      line-height:1;
-      margin:0;
-      color: rgba(0,0,0,.92);
-    }
-
-    .msg{
-      margin-top:6px;
-      display:inline-block;
-      padding:10px 12px;
-      border: 1px solid rgba(0,0,0,.35);
-      border-radius: 10px;
-      color: rgba(0,0,0,.92);
-      background: rgba(255,255,255,.35);
-      max-width: 36ch;
-      font-size:18px;
-    }
-
-    .sub{
-      color: rgba(0,0,0,.70);
-      font-size:16px;
-      margin:0;
-    }
-
-    /* Hint text below */
     .hint{
-      margin-top:18px;
+      position:absolute;
+      bottom:28px;
+      left:0; right:0;
       text-align:center;
-      color: rgba(255,255,255,.72);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      font-size: 12px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    /* Fade-to-black transport */
-    .veil{
-      position:fixed; inset:0;
-      background: radial-gradient(600px 380px at 50% 40%, rgba(255,255,255,.08), transparent 60%),
-                  #000;
-      opacity:0;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      font: 12px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      opacity:.75;
+      user-select:none;
       pointer-events:none;
-      transition: opacity 900ms ease;
-      z-index:50;
-    }
-    .veil.on{ opacity:1; }
-
-    /* Tunnel shimmer */
-    .tunnel{
-      position:fixed; inset:-20%;
-      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.20), transparent 45%),
-                  repeating-radial-gradient(circle at 50% 50%,
-                    rgba(255,255,255,.06) 0px,
-                    rgba(255,255,255,.06) 2px,
-                    transparent 8px,
-                    transparent 18px);
-      opacity:0;
-      transform: scale(.9);
-      filter: blur(.2px);
-      pointer-events:none;
-      transition: opacity 900ms ease, transform 900ms ease;
-      z-index:55;
-      mix-blend-mode: screen;
-    }
-    .tunnel.on{
-      opacity:.35;
-      transform: scale(1.05);
-      animation: drift 1200ms ease-in-out infinite alternate;
-    }
-    @keyframes drift{
-      from{ transform: scale(1.03) translateY(0px); }
-      to{ transform: scale(1.07) translateY(10px); }
     }
 
-    /* 3rd visit message */
-    .toast{
-      position:fixed;
+    /* Envelope card */
+    .card{
+      width:min(560px, 92vw);
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+      position:relative;
+      display:grid;
+      place-items:center;
+      perspective: 1200px;
+    }
+
+    /* Envelope body */
+    .envelope{
+      width:min(520px, 86vw);
+      height:min(300px, 50vw);
+      max-height:320px;
+      position:relative;
+      transform-style:preserve-3d;
+      cursor:pointer;
+      user-select:none;
+      border-radius: 14px;
+      outline:none;
+    }
+
+    /* Two-sided flip wrapper */
+    .flip{
+      position:absolute; inset:0;
+      transform-style:preserve-3d;
+      transition: transform 900ms cubic-bezier(.2,.9,.1,1);
+      border-radius:14px;
+    }
+
+    body.state-1 .flip{
+      transform: rotateY(180deg);
+    }
+
+    .side{
+      position:absolute; inset:0;
+      backface-visibility:hidden;
+      border-radius:14px;
+      overflow:hidden;
+      background: linear-gradient(180deg, var(--paper) 0%, var(--paper2) 100%);
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 14px 35px rgba(0,0,0,.25);
+    }
+
+    .side.back{
+      transform: rotateY(180deg);
+    }
+
+    /* Front: flap DOWN facing viewer (what you asked) */
+    .flap-down{
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,0)),
+        linear-gradient(135deg, rgba(0,0,0,.06), rgba(0,0,0,0));
+    }
+
+    /* Flap triangle (down) */
+    .flap-tri{
+      position:absolute;
       left:50%;
-      bottom:26px;
+      top:-2px;
+      width:0; height:0;
       transform: translateX(-50%);
-      padding:10px 12px;
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 12px;
-      background: rgba(10,10,14,.55);
-      color: rgba(255,255,255,.86);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      font-size: 13px;
+      border-left: 270px solid transparent;
+      border-right:270px solid transparent;
+      border-top: 170px solid rgba(0,0,0,.06); /* subtle crease */
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,.10));
+      opacity:.9;
+    }
+
+    /* Address */
+    .address{
+      position:absolute;
+      left:26px;
+      top:22px;
+      color: var(--ink);
+      opacity:.95;
+    }
+    .address .for{
+      font-size:18px;
+      margin-bottom:4px;
+      opacity:.8;
+      font-style:italic;
+    }
+    .address .name{
+      font-size:56px;
+      font-weight:700;
+      line-height:1;
+      letter-spacing:-.02em;
+      margin:0 0 14px 0;
+    }
+    .address .from{
+      font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      color: rgba(0,0,0,.68);
+    }
+
+    /* Back: flap UP (after first click) */
+    .flap-up{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0)),
+        linear-gradient(135deg, rgba(0,0,0,.03), rgba(0,0,0,0));
+    }
+    .flap-up .tri{
+      position:absolute;
+      left:50%;
+      bottom:-2px;
+      width:0; height:0;
+      transform: translateX(-50%);
+      border-left: 270px solid transparent;
+      border-right:270px solid transparent;
+      border-bottom: 170px solid rgba(0,0,0,.06);
+      filter: drop-shadow(0 -10px 12px rgba(0,0,0,.10));
+      opacity:.9;
+    }
+
+    /* Open state (second click): reveal note */
+    .note{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
       opacity:0;
-      transition: opacity 500ms ease;
-      z-index:80;
+      transform: translateY(10px);
+      transition: opacity 500ms ease, transform 500ms ease;
       pointer-events:none;
     }
-    .toast.on{ opacity:1; }
+    body.state-2 .note{
+      opacity:1;
+      transform: translateY(0);
+    }
 
-    /* Mobile friendliness */
-    @media (max-width:520px){
-      .title{ font-size:44px; }
-      .msg{ font-size:16px; }
+    .note .paper{
+      width:min(420px, 72vw);
+      padding:16px 18px;
+      border-radius:12px;
+      background: rgba(255,255,255,.92);
+      color:#111;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      border: 1px solid rgba(0,0,0,.08);
+      font: 16px/1.35 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    .note .paper strong{
+      font-weight:700;
+    }
+    .note .sub{
+      margin-top:6px;
+      color:#333;
+      opacity:.75;
+      font-size:13px;
+      letter-spacing:.08em;
+      text-transform:lowercase;
+    }
+
+    /* Small instruction on envelope */
+    .micro{
+      position:absolute;
+      left:26px;
+      bottom:18px;
+      color: rgba(0,0,0,.55);
+      font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      opacity:.8;
+    }
+
+    /* Tunnel overlay (third click) */
+    .tunnel{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 500ms ease;
+      background:#000;
+    }
+    body.state-3 .tunnel{
+      opacity:1;
+      pointer-events:auto;
+    }
+    canvas{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .flip{ transition:none; }
+      .note{ transition:none; }
+      .tunnel{ transition:none; }
     }
   </style>
 </head>
 
-<body>
-  <div class="wrap">
-    <div class="stage">
-      <div id="env" class="envelope" role="button" aria-label="Open the envelope" tabindex="0">
-        <div class="env-body"></div>
-
-        <!-- Embossed Algiz watermark -->
-        <svg class="algiz" viewBox="0 0 200 200" aria-hidden="true">
-          <!-- Algiz-like shape -->
-          <path d="M100 30 L100 170 M100 70 L55 40 M100 70 L145 40" />
-        </svg>
-
-        <div class="letter" aria-hidden="true">
-          <div class="tiny">for</div>
-          <h1 class="title">Babe</h1>
-          <div id="msg" class="msg">I left this here for you.</div>
-          <p class="sub" id="sub">click again.</p>
-        </div>
-
-        <div class="flap"></div>
-      </div>
-
-      <div class="hint">tap / click • three steps • enter gently</div>
-    </div>
+<body class="state-0">
+  <!-- Tunnel (appears on state-3) -->
+  <div class="tunnel" aria-hidden="true">
+    <canvas id="tunnelCanvas"></canvas>
   </div>
 
-  <div id="veil" class="veil"></div>
-  <div id="tunnel" class="tunnel"></div>
-  <div id="toast" class="toast">awh, nice to see you again. i’m glad you came.</div>
+  <div class="stage">
+    <div class="card">
+      <div class="envelope" id="gate" tabindex="0" role="button" aria-label="Envelope gate. Click to proceed.">
+        <div class="flip">
+          <!-- FRONT (flap DOWN) -->
+          <div class="side front">
+            <div class="flap-down">
+              <div class="flap-tri"></div>
+            </div>
+
+            <div class="address">
+              <div class="for">To</div>
+              <div class="name">Babe</div>
+              <div class="from">Fr: Nasia Jade</div>
+            </div>
+
+            <div class="micro">click again.</div>
+          </div>
+
+          <!-- BACK (flap UP) -->
+          <div class="side back">
+            <div class="flap-up">
+              <div class="tri"></div>
+            </div>
+            <div class="address" style="top:26px;">
+              <div class="for">for</div>
+              <div class="name" style="font-size:54px;">Babe</div>
+              <div class="from">turning it over…</div>
+            </div>
+            <div class="micro">click again.</div>
+          </div>
+        </div>
+
+        <!-- NOTE (revealed on state-2) -->
+        <div class="note">
+          <div class="paper">
+            <strong>i left this here for you.</strong><br/>
+            enter gently.
+            <div class="sub">(one more click)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint">tap / click • three steps • enter gently</div>
+  </div>
 
   <script>
-    // Visit count (localStorage)
+    // 3-step gate:
+    // state-0 = front (flap down)
+    // state-1 = flipped (flap up)
+    // state-2 = open + note
+    // state-3 = tunnel animation + redirect to /vault/
     (function(){
-      const key = "vault_visits";
-      let v = parseInt(localStorage.getItem(key) || "0", 10);
-      v += 1;
-      localStorage.setItem(key, String(v));
-      if (v >= 3){
-        const t = document.getElementById("toast");
-        t.classList.add("on");
-        setTimeout(()=>t.classList.remove("on"), 4200);
+      const body = document.body;
+      const gate = document.getElementById('gate');
+
+      let step = 0;
+
+      function setState(n){
+        body.classList.remove('state-0','state-1','state-2','state-3');
+        body.classList.add(`state-${n}`);
+      }
+
+      function next(){
+        step = Math.min(step + 1, 3);
+        setState(step);
+
+        if(step === 3){
+          startTunnel();
+          // Give the tunnel a moment to pull them in, then enter the vault
+          setTimeout(() => {
+            window.location.href = "/vault/";
+          }, 1250);
+        }
+      }
+
+      gate.addEventListener('click', (e) => {
+        e.preventDefault();
+        next();
+      });
+
+      gate.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          next();
+        }
+      });
+
+      // ---- Tunnel animation (real moving depth, not flat spiral) ----
+      const canvas = document.getElementById('tunnelCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let w, h, dpr, rafId;
+      let t = 0;
+
+      function resize(){
+        dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+
+      window.addEventListener('resize', resize);
+
+      function draw(){
+        t += 0.016;
+
+        ctx.clearRect(0,0,w,h);
+
+        // subtle vignette
+        const vg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/1.15);
+        vg.addColorStop(0, 'rgba(10,10,14,0.15)');
+        vg.addColorStop(0.55, 'rgba(0,0,0,0.78)');
+        vg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0,0,w,h);
+
+        // moving tunnel rings
+        const cx = w/2, cy = h/2;
+        const maxR = Math.hypot(w,h) * 0.7;
+
+        // We render rings that "advance" toward viewer: spacing changes over time.
+        const speed = 220;               // overall travel speed
+        const depth = 44;                // number of rings
+        const base = (t * speed) % 80;   // phase offset
+
+        for(let i=0;i<depth;i++){
+          // nearer rings are brighter and thicker
+          const z = (i * 80 + base); // depth coordinate
+          const p = (z % (depth*80)) / (depth*80); // 0..1
+          const ease = Math.pow(1 - p, 2.2);
+
+          const r = 40 + ease * maxR;
+          const alpha = 0.02 + ease * 0.12;
+
+          // slight wobble so it feels alive (not a flat spiral)
+          const wobX = Math.sin(t*1.6 + i*0.45) * (6 + 10*ease);
+          const wobY = Math.cos(t*1.3 + i*0.50) * (6 + 10*ease);
+
+          ctx.beginPath();
+          ctx.arc(cx + wobX, cy + wobY, r, 0, Math.PI*2);
+          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+          ctx.lineWidth = 1 + 3.2*ease;
+          ctx.stroke();
+        }
+
+        // faint grain
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        for(let i=0;i<120;i++){
+          const x = Math.random()*w;
+          const y = Math.random()*h;
+          ctx.fillRect(x,y,1,1);
+        }
+
+        rafId = requestAnimationFrame(draw);
+      }
+
+      let tunnelRunning = false;
+      function startTunnel(){
+        if(tunnelRunning) return;
+        tunnelRunning = true;
+        resize();
+        draw();
       }
     })();
-
-    const env = document.getElementById("env");
-    const msg = document.getElementById("msg");
-    const sub = document.getElementById("sub");
-    const veil = document.getElementById("veil");
-    const tunnel = document.getElementById("tunnel");
-
-    let step = 0;
-    // step 0: envelope is "open side down" (conceptually)
-    // step 1: flip over
-    // step 2: open flap + reveal message
-    // step 3: transport + redirect to /vault/
-
-    function advance(){
-      step++;
-
-      if (step === 1){
-        env.classList.add("flipped");
-        msg.textContent = "I left this here for you.";
-        sub.textContent = "click again.";
-        return;
-      }
-
-      if (step === 2){
-        env.classList.add("opened");
-        msg.textContent = "I left this here for you.";
-        sub.textContent = "enter gently.";
-        return;
-      }
-
-      if (step >= 3){
-        // Transport
-        veil.classList.add("on");
-        tunnel.classList.add("on");
-        setTimeout(()=>{
-          // Send them into the vault world
-          window.location.href = "/vault/";
-        }, 900);
-      }
-    }
-
-    env.addEventListener("click", advance);
-    env.addEventListener("keydown", (e)=>{
-      if (e.key === "Enter" || e.key === " "){
-        e.preventDefault();
-        advance();
-      }
-    });
   </script>
 </body>
 </html>
