@@ -4,15 +4,39 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Babe</title>
+
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&family=Italiana&display=swap");
+
     :root{
       --bg:#07070a;
-      --paper:#f4f1ea;
-      --paper2:#efe9dd;
+
+      /* Envelope / paper tone */
+      --paper:#f3efe6;
+      --paper2:#efe6d8;
+
+      /* Envelope tint (subtle) */
+      --envelope-tint: rgba(220, 210, 195, .32);
+
       --ink:#111;
-      --muted:#6c6a66;
-      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --ink-soft: rgba(0,0,0,.68);
+
+      --shadow: 0 22px 70px rgba(0,0,0,.58);
       --radius: 18px;
+
+      --hand: "Caveat", cursive;     /* handwriting */
+      --serif: "Italiana", ui-serif; /* elegant title */
+
+      /* ================== ANTIQUE CEREMONIAL GOLD WAX ==================
+         Deeper brass base + aged highlight + subtle patina + edge soot
+      */
+      --wax-base:#3a2a05;      /* deep resin */
+      --wax-bronze:#7b5a16;    /* antique bronze */
+      --wax-gold:#b58a2a;      /* ceremonial gold */
+      --wax-highlight:#f0d08a; /* aged highlight */
+      --wax-patina:#2b5b54;    /* subtle green patina */
+      --wax-soot:#0f0b02;      /* edge soot */
+      --wax-ivory:#fff0c9;     /* gleam line */
     }
 
     *{ box-sizing:border-box; }
@@ -48,9 +72,9 @@
       pointer-events:none;
     }
 
-    /* Envelope card */
+    /* Card shell */
     .card{
-      width:min(560px, 92vw);
+      width:min(640px, 92vw);
       aspect-ratio: 16 / 9;
       border-radius: var(--radius);
       background: rgba(255,255,255,.04);
@@ -59,20 +83,36 @@
       display:grid;
       place-items:center;
       perspective: 1200px;
+      overflow:hidden;
+    }
+
+    /* subtle dust/grain on card */
+    .card::after{
+      content:"";
+      position:absolute; inset:0;
+      pointer-events:none;
+      opacity:.10;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.22), transparent 40%),
+        radial-gradient(circle at 70% 60%, rgba(255,255,255,.18), transparent 45%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 3px);
+      mix-blend-mode: overlay;
     }
 
     /* Envelope body */
     .envelope{
-      width:min(520px, 86vw);
-      height:min(300px, 50vw);
-      max-height:320px;
+      width:min(560px, 88vw);
+      height:min(340px, 54vw);
+      max-height:360px;
       position:relative;
       transform-style:preserve-3d;
       cursor:pointer;
       user-select:none;
       border-radius: 14px;
       outline:none;
+      transition: transform 220ms ease;
     }
+    .envelope:active{ transform: translateY(1px) scale(.997); }
 
     /* Two-sided flip wrapper */
     .flip{
@@ -82,7 +122,11 @@
       border-radius:14px;
     }
 
-    body.state-1 .flip{
+    /* Keep flipped once flipped */
+    body.state-1 .flip,
+    body.state-2 .flip,
+    body.state-3 .flip,
+    body.state-4 .flip{
       transform: rotateY(180deg);
     }
 
@@ -91,163 +135,507 @@
       backface-visibility:hidden;
       border-radius:14px;
       overflow:hidden;
-      background: linear-gradient(180deg, var(--paper) 0%, var(--paper2) 100%);
-      border: 1px solid rgba(0,0,0,.08);
-      box-shadow: 0 14px 35px rgba(0,0,0,.25);
-    }
-
-    .side.back{
-      transform: rotateY(180deg);
-    }
-
-    /* Front: flap DOWN facing viewer (what you asked) */
-    .flap-down{
-      position:absolute;
-      inset:0;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,0)),
-        linear-gradient(135deg, rgba(0,0,0,.06), rgba(0,0,0,0));
+        linear-gradient(180deg, var(--paper) 0%, var(--paper2) 100%),
+        var(--envelope-tint);
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+      transform: translateZ(0);
+    }
+    .side.back{ transform: rotateY(180deg) translateZ(0); }
+
+    /* CRINKLE TEXTURE using inline SVG turbulence */
+    .crinkle{
+      position:absolute; inset:0;
+      pointer-events:none;
+      opacity:.28;
+      mix-blend-mode:multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='360'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      background-size: cover;
     }
 
-    /* Flap triangle (down) */
-    .flap-tri{
-      position:absolute;
-      left:50%;
-      top:-2px;
-      width:0; height:0;
-      transform: translateX(-50%);
-      border-left: 270px solid transparent;
-      border-right:270px solid transparent;
-      border-top: 170px solid rgba(0,0,0,.06); /* subtle crease */
-      filter: drop-shadow(0 10px 12px rgba(0,0,0,.10));
-      opacity:.9;
+    /* Front: writing side only */
+    .front-face{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(255,255,255,.34), rgba(255,255,255,0)),
+        linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0));
     }
 
-    /* Address */
-    .address{
-      position:absolute;
-      left:26px;
-      top:22px;
-      color: var(--ink);
-      opacity:.95;
-    }
-    .address .for{
-      font-size:18px;
-      margin-bottom:4px;
-      opacity:.8;
-      font-style:italic;
-    }
-    .address .name{
-      font-size:56px;
-      font-weight:700;
-      line-height:1;
-      letter-spacing:-.02em;
-      margin:0 0 14px 0;
-    }
-    .address .from{
-      font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      color: rgba(0,0,0,.68);
-    }
-
-    /* Back: flap UP (after first click) */
-    .flap-up{
+    /* Back: pocket + flap */
+    .back-face{
       position:absolute; inset:0;
       background:
         linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0)),
-        linear-gradient(135deg, rgba(0,0,0,.03), rgba(0,0,0,0));
-    }
-    .flap-up .tri{
-      position:absolute;
-      left:50%;
-      bottom:-2px;
-      width:0; height:0;
-      transform: translateX(-50%);
-      border-left: 270px solid transparent;
-      border-right:270px solid transparent;
-      border-bottom: 170px solid rgba(0,0,0,.06);
-      filter: drop-shadow(0 -10px 12px rgba(0,0,0,.10));
-      opacity:.9;
+        radial-gradient(900px 520px at 50% 75%, rgba(0,0,0,.10), transparent 55%);
     }
 
-    /* Open state (second click): reveal note */
-    .note{
-      position:absolute;
-      inset:0;
-      display:grid;
-      place-items:center;
-      opacity:0;
-      transform: translateY(10px);
-      transition: opacity 500ms ease, transform 500ms ease;
+    /* Pocket folds */
+    .pocket{
+      position:absolute; inset:0;
       pointer-events:none;
+      opacity:.98;
     }
-    body.state-2 .note{
-      opacity:1;
-      transform: translateY(0);
+    .pocket .left{
+      position:absolute; left:0; top:35%;
+      width:50%; height:65%;
+      background: rgba(0,0,0,.055);
+      clip-path: polygon(0 0, 100% 55%, 0 100%);
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
     }
-
-    .note .paper{
-      width:min(420px, 72vw);
-      padding:16px 18px;
-      border-radius:12px;
-      background: rgba(255,255,255,.92);
-      color:#111;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      border: 1px solid rgba(0,0,0,.08);
-      font: 16px/1.35 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    .pocket .right{
+      position:absolute; right:0; top:35%;
+      width:50%; height:65%;
+      background: rgba(0,0,0,.045);
+      clip-path: polygon(100% 0, 100% 100%, 0 55%);
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
     }
-    .note .paper strong{
-      font-weight:700;
-    }
-    .note .sub{
-      margin-top:6px;
-      color:#333;
-      opacity:.75;
-      font-size:13px;
-      letter-spacing:.08em;
-      text-transform:lowercase;
+    .pocket .bottom{
+      position:absolute; left:0; right:0; bottom:0;
+      height:62%;
+      background: rgba(0,0,0,.06);
+      clip-path: polygon(0 100%, 50% 18%, 100% 100%);
+      filter: drop-shadow(0 -8px 12px rgba(0,0,0,.10));
     }
 
-    /* Small instruction on envelope */
+    /* Flap (closed) */
+    .flap{
+      position:absolute;
+      left:0; right:0;
+      top:0;
+      height:58%;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      background: rgba(0,0,0,.065);
+      transform-origin: 50% 0%;
+      transform: rotateX(0deg);
+      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+      filter: drop-shadow(0 12px 14px rgba(0,0,0,.12));
+      z-index:3;
+    }
+    .flap::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0) 55%);
+      opacity:.35;
+    }
+
+    /* Open on state-2 */
+    body.state-2 .flap{ transform: rotateX(-165deg); }
+
+    /* Address typography + INK wobble */
+    .address{
+      position:absolute;
+      left:32px;
+      top:28px;
+      color: var(--ink);
+      opacity:.98;
+    }
+    .address .to{
+      font-family: var(--hand);
+      font-size:26px;
+      opacity:.72;
+      letter-spacing:.01em;
+      margin-bottom:8px;
+      animation: inkWobble 5.6s ease-in-out infinite;
+    }
+    .address .name{
+      font-family: var(--serif);
+      font-size:78px;
+      font-weight:400;
+      line-height:.92;
+      letter-spacing:.01em;
+      margin:0 0 10px 0;
+      text-shadow: 0 1px 0 rgba(0,0,0,.08);
+    }
+    .address .from{
+      font-family: var(--hand);
+      font-size:28px;
+      color: var(--ink-soft);
+      letter-spacing:.01em;
+      animation: inkWobble 6.8s ease-in-out infinite;
+    }
+
+    /* slight ink wobble + micro bleed */
+    @keyframes inkWobble{
+      0%,100%{
+        filter: blur(0px);
+        text-shadow: 0.6px 0.2px 0 rgba(0,0,0,.10), -0.4px 0.1px 0 rgba(0,0,0,.06);
+        transform: translateY(0px);
+        opacity: .98;
+      }
+      50%{
+        filter: blur(.08px);
+        text-shadow: 0.9px 0.25px 0 rgba(0,0,0,.12), -0.55px 0.15px 0 rgba(0,0,0,.07);
+        transform: translateY(-.2px);
+        opacity: .96;
+      }
+    }
+
     .micro{
       position:absolute;
       left:26px;
       bottom:18px;
-      color: rgba(0,0,0,.55);
-      font: 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      opacity:.8;
+      color: rgba(0,0,0,.52);
+      font: 18px/1 var(--hand);
+      opacity:.82;
+      letter-spacing:.01em;
     }
 
-    /* Tunnel overlay (third click) */
+    .back-copy{
+      position:absolute;
+      left:28px;
+      bottom:22px;
+      font-family: var(--hand);
+      font-size:26px;
+      color: rgba(0,0,0,.60);
+      opacity:.95;
+    }
+
+    /* ================== GOLD WAX SEAL with ALGIZ ================== */
+    .seal-wrap{
+      position:absolute;
+      left:50%;
+      top:42%;
+      transform: translate(-50%,-50%);
+      z-index:5;
+      pointer-events:none;
+      transition: opacity 420ms ease, transform 420ms ease;
+    }
+    /* Seal "breaks" when opening */
+    body.state-2 .seal-wrap{
+      opacity:0;
+      transform: translate(-50%,-50%) scale(.94) rotate(-4deg);
+      filter: blur(.2px);
+    }
+
+    .seal{
+      width:88px;
+      height:88px;
+      border-radius:999px;
+      position:relative;
+
+      /* antique ceremonial gold wax + patina */
+      background:
+        /* bright aged gleam */
+        radial-gradient(circle at 28% 22%, rgba(255,240,201,.95), rgba(255,240,201,0) 40%),
+        /* patina hints */
+        radial-gradient(circle at 76% 26%, rgba(43,91,84,.24), rgba(43,91,84,0) 48%),
+        radial-gradient(circle at 32% 78%, rgba(43,91,84,.18), rgba(43,91,84,0) 52%),
+        /* edge soot */
+        radial-gradient(circle at 70% 76%, rgba(15,11,2,.30), rgba(15,11,2,0) 55%),
+        /* molten depth */
+        radial-gradient(circle at 50% 58%, var(--wax-highlight) 0%, var(--wax-gold) 36%, var(--wax-bronze) 68%, var(--wax-base) 100%);
+      box-shadow:
+        0 14px 20px rgba(0,0,0,.28),
+        inset 0 -12px 18px rgba(0,0,0,.30),
+        inset 0 10px 18px rgba(255,255,255,.18);
+      filter: saturate(1.02) contrast(1.07);
+    }
+
+    /* molten irregular edge pooling */
+    .seal::before{
+      content:"";
+      position:absolute; inset:-7px;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 18% 38%, rgba(0,0,0,.28), rgba(0,0,0,0) 58%),
+        radial-gradient(circle at 86% 66%, rgba(255,255,255,.16), rgba(255,255,255,0) 58%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.08), rgba(255,255,255,0) 60%);
+      filter: blur(1.1px);
+      opacity:.88;
+      pointer-events:none;
+    }
+
+    /* Emboss ring */
+    .seal::after{
+      content:"";
+      position:absolute;
+      inset:12px;
+      border-radius:999px;
+      border: 2px solid rgba(255,240,201,.22);
+      box-shadow:
+        inset 0 2px 3px rgba(0,0,0,.30),
+        0 2px 2px rgba(0,0,0,.10);
+      opacity:.62;
+      pointer-events:none;
+    }
+
+    /* ===== Pressed Algiz: bevel + inner shadow + highlight ===== */
+    .algiz{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+    }
+
+    .algiz .stamp{
+      width:54px;
+      height:54px;
+      position:relative;
+      display:grid;
+      place-items:center;
+    }
+
+    /* top highlight (like raised edge catching light) */
+    .algiz .stamp::before{
+      content:"";
+      position:absolute; inset:-2px;
+      border-radius:14px;
+      filter: blur(.6px);
+      opacity:.35;
+      background: radial-gradient(circle at 30% 20%, rgba(255,240,201,.75), rgba(255,240,201,0) 55%);
+      pointer-events:none;
+    }
+
+    /* inner shadow (pressed-in feel) */
+    .algiz svg{
+      width:50px;
+      height:50px;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.25));
+    }
+
+    /* Base line set: darker groove + subtle highlight edge */
+    .algiz .groove{
+      stroke: rgba(45,28,0,.58);
+      stroke-width: 6.2;
+      stroke-linecap: round;
+    }
+    .algiz .edge{
+      stroke: rgba(255,240,201,.58);
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      opacity:.65;
+    }
+
+    /* ------------------- NOTE: slides out of pocket ------------------- */
+    .note-stage{
+      position:absolute;
+      left:0; right:0;
+      top:0; bottom:0;
+      pointer-events:none;
+      z-index:4;
+      clip-path: polygon(8% 30%, 92% 30%, 92% 92%, 8% 92%);
+    }
+
+    .note{
+      position:absolute;
+      left:50%;
+      top:34%;
+      width:min(470px, 78vw);
+      transform: translateX(-50%) translateY(118px);
+      opacity:0;
+      transition:
+        transform 900ms cubic-bezier(.18,.9,.22,1),
+        opacity 420ms ease;
+      filter: drop-shadow(0 16px 24px rgba(0,0,0,.22));
+    }
+
+    body.state-2 .note{
+      opacity:1;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    .note .paper{
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(0,0,0,.10);
+      border-radius: 12px;
+      padding: 18px 18px 16px 18px;
+      color:#101010;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .note .paper::before{
+      content:"";
+      position:absolute; inset:0;
+      opacity:.18;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+      background-size: cover;
+      mix-blend-mode:multiply;
+      pointer-events:none;
+    }
+
+    .note .msg{
+      position:relative;
+      font-family: var(--hand);
+      font-size: 34px;
+      line-height: 1.02;
+      letter-spacing:.01em;
+      animation: inkWobble 6.2s ease-in-out infinite;
+    }
+
+    .note .sub{
+      position:relative;
+      margin-top:10px;
+      font-family: var(--hand);
+      font-size:22px;
+      opacity:.68;
+    }
+
+    /* ------------------- FULL LETTER MODAL ------------------- */
+    .letter-overlay{
+      position:fixed;
+      inset:0;
+      z-index:10;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 520ms ease;
+      background: rgba(0,0,0,.58);
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    body.state-3 .letter-overlay{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .letter{
+      width:min(760px, 92vw);
+      max-height:min(82vh, 760px);
+      overflow:auto;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(245,238,226,.96));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 26px 90px rgba(0,0,0,.62);
+      position:relative;
+      padding: 26px 24px 18px 24px;
+    }
+
+    .letter::before{
+      content:"";
+      position:absolute; inset:0;
+      border-radius:16px;
+      opacity:.16;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='880' height='960'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+      background-size: cover;
+      mix-blend-mode:multiply;
+      pointer-events:none;
+    }
+
+    .letter h1{
+      font-family: var(--serif);
+      font-weight:400;
+      color:#141414;
+      margin:0 0 10px 0;
+      font-size:46px;
+      letter-spacing:.02em;
+      position:relative;
+    }
+
+    .letter .meta{
+      font-family: var(--hand);
+      font-size:24px;
+      color: rgba(0,0,0,.62);
+      position:relative;
+      margin-bottom: 14px;
+    }
+
+    .letter .body{
+      font-family: var(--hand);
+      font-size:30px;
+      line-height:1.18;
+      color:#141414;
+      letter-spacing:.01em;
+      position:relative;
+      animation: inkWobble 7.2s ease-in-out infinite;
+      padding-bottom: 8px;
+    }
+
+    .letter .footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid rgba(0,0,0,.12);
+      position:relative;
+    }
+
+    .letter .cta{
+      font: 13px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color: rgba(0,0,0,.58);
+    }
+
+    .letter .btn{
+      border:1px solid rgba(0,0,0,.18);
+      background: rgba(0,0,0,.04);
+      color:#111;
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font: 12px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+    .letter .btn:hover{ background: rgba(0,0,0,.06); }
+    .letter .btn:active{ transform: translateY(1px); }
+
+    /* ------------------- TUNNEL ------------------- */
     .tunnel{
       position:fixed;
       inset:0;
-      z-index:1;
+      z-index:20;
       opacity:0;
       pointer-events:none;
       transition: opacity 500ms ease;
       background:#000;
     }
-    body.state-3 .tunnel{
+    body.state-4 .tunnel{
       opacity:1;
       pointer-events:auto;
     }
-    canvas{
-      width:100%;
-      height:100%;
-      display:block;
-    }
+    canvas{ width:100%; height:100%; display:block; }
 
-    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
-      .flip{ transition:none; }
-      .note{ transition:none; }
-      .tunnel{ transition:none; }
+      .flip,.flap,.note,.letter-overlay,.tunnel{ transition:none; }
+      .address .to,.address .from,.note .msg,.letter .body{ animation:none; }
     }
   </style>
 </head>
 
 <body class="state-0">
-  <!-- Tunnel (appears on state-3) -->
+
+  <!-- Letter overlay (state-3) -->
+  <div class="letter-overlay" id="letterOverlay" aria-hidden="true">
+    <div class="letter" role="dialog" aria-modal="true" aria-label="Letter">
+      <h1>The Vault</h1>
+      <div class="meta">for Babe — from Nasia Jade</div>
+
+      <!-- UPGRADE #3: Bunny Club / Vault tone letter (editable) -->
+      <div class="body" id="letterBody">
+        you found it.
+        <br/><br/>
+        this isn’t a demand. it’s a relic.
+        something i pressed into the dark so it would still be here
+        whenever you finally moved slow enough to notice.
+        <br/><br/>
+        inside this place, nothing chases you.
+        nothing asks you to perform.
+        nothing tries to rip a confession out of your ribs.
+        <br/><br/>
+        you can stand at the threshold and breathe.
+        you can leave.
+        you can return.
+        <br/><br/>
+        but if you enter…
+        <br/>
+        enter gently.
+      </div>
+
+      <div class="footer">
+        <div class="cta">one more click • enter the tunnel</div>
+        <button class="btn" id="enterBtn">enter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tunnel (state-4) -->
   <div class="tunnel" aria-hidden="true">
     <canvas id="tunnelCanvas"></canvas>
   </div>
@@ -256,14 +644,14 @@
     <div class="card">
       <div class="envelope" id="gate" tabindex="0" role="button" aria-label="Envelope gate. Click to proceed.">
         <div class="flip">
-          <!-- FRONT (flap DOWN) -->
+
+          <!-- FRONT: writing side -->
           <div class="side front">
-            <div class="flap-down">
-              <div class="flap-tri"></div>
-            </div>
+            <div class="front-face"></div>
+            <div class="crinkle"></div>
 
             <div class="address">
-              <div class="for">To</div>
+              <div class="to">To</div>
               <div class="name">Babe</div>
               <div class="from">Fr: Nasia Jade</div>
             </div>
@@ -271,82 +659,283 @@
             <div class="micro">click again.</div>
           </div>
 
-          <!-- BACK (flap UP) -->
+          <!-- BACK: flap + pocket + seal -->
           <div class="side back">
-            <div class="flap-up">
-              <div class="tri"></div>
-            </div>
-            <div class="address" style="top:26px;">
-              <div class="for">for</div>
-              <div class="name" style="font-size:54px;">Babe</div>
-              <div class="from">turning it over…</div>
-            </div>
-            <div class="micro">click again.</div>
-          </div>
-        </div>
+            <div class="back-face"></div>
+            <div class="crinkle"></div>
 
-        <!-- NOTE (revealed on state-2) -->
-        <div class="note">
-          <div class="paper">
-            <strong>i left this here for you.</strong><br/>
-            enter gently.
-            <div class="sub">(one more click)</div>
+            <div class="pocket" aria-hidden="true">
+              <div class="left"></div>
+              <div class="right"></div>
+              <div class="bottom"></div>
+            </div>
+
+            <div class="flap" aria-hidden="true"></div>
+
+            <!-- UPGRADE #1 & #2: Antique ceremonial gold wax + pressed Algiz -->
+            <div class="seal-wrap" id="sealWrap" aria-hidden="true">
+              <div class="seal">
+                <div class="algiz" aria-hidden="true">
+                  <div class="stamp">
+                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <!-- pressed groove (dark) -->
+                      <path class="groove" d="M32 10V54"/>
+                      <path class="groove" d="M32 18 L18 30"/>
+                      <path class="groove" d="M32 18 L46 30"/>
+                      <!-- highlight edge (light) to fake bevel -->
+                      <path class="edge" d="M32 10V54"/>
+                      <path class="edge" d="M32 18 L18 30"/>
+                      <path class="edge" d="M32 18 L46 30"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Note stage clipped to pocket area -->
+            <div class="note-stage" aria-hidden="true">
+              <div class="note" id="note">
+                <div class="paper">
+                  <div class="msg">i left this here for you.<br/>enter gently.</div>
+                  <div class="sub">(click to read)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="back-copy">turn it over…</div>
+            <div class="micro">click again.</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="hint">tap / click • three steps • enter gently</div>
+    <div class="hint" id="hint">tap / click • four steps • enter gently</div>
   </div>
 
   <script>
-    // 3-step gate:
-    // state-0 = front (flap down)
-    // state-1 = flipped (flap up)
-    // state-2 = open + note
-    // state-3 = tunnel animation + redirect to /vault/
+    // Flow:
+    // state-0 = front (writing)
+    // state-1 = flipped to back (flap closed + seal visible)
+    // state-2 = flap opens + seal "breaks" + note slides out
+    // state-3 = letter overlay
+    // state-4 = tunnel + redirect to /vault/
+
     (function(){
       const body = document.body;
       const gate = document.getElementById('gate');
+      const hint = document.getElementById('hint');
+      const enterBtn = document.getElementById('enterBtn');
+      const letterOverlay = document.getElementById('letterOverlay');
 
       let step = 0;
+      let locked = false;
 
       function setState(n){
-        body.classList.remove('state-0','state-1','state-2','state-3');
+        body.classList.remove('state-0','state-1','state-2','state-3','state-4');
         body.classList.add(`state-${n}`);
+        hint.textContent =
+          (n <= 2) ? "tap / click • four steps • enter gently" :
+          (n === 3) ? "read • breathe • then enter" :
+          "entering…";
+      }
+
+      // ---------- AUDIO (WebAudio synthesis, no external files) ----------
+      let audioReady = false;
+      let ac, master;
+
+      function initAudio(){
+        if(audioReady) return;
+        audioReady = true;
+
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        master = ac.createGain();
+        master.gain.value = 0.55;
+        master.connect(ac.destination);
+      }
+
+      function noiseBurst(duration=0.12, gain=0.28, lowpass=1200){
+        if(!audioReady) return;
+
+        const bufferSize = Math.max(1, Math.floor(ac.sampleRate * duration));
+        const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+        const data = buffer.getChannelData(0);
+        for(let i=0;i<bufferSize;i++){
+          data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+        }
+        const src = ac.createBufferSource();
+        src.buffer = buffer;
+
+        const filt = ac.createBiquadFilter();
+        filt.type = 'lowpass';
+        filt.frequency.value = lowpass;
+
+        const g = ac.createGain();
+        g.gain.value = gain;
+
+        src.connect(filt);
+        filt.connect(g);
+        g.connect(master);
+
+        src.start();
+        src.stop(ac.currentTime + duration);
+      }
+
+      function clickTick(){
+        if(!audioReady) return;
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(220, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(90, ac.currentTime + 0.06);
+        g.gain.setValueAtTime(0.0001, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.08, ac.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.08);
+        o.connect(g);
+        g.connect(master);
+        o.start();
+        o.stop(ac.currentTime + 0.09);
+      }
+
+      function paperRustle(){
+        noiseBurst(0.18, 0.22, 1600);
+        noiseBurst(0.10, 0.14, 900);
+      }
+
+      function sealCrack(){
+        noiseBurst(0.06, 0.30, 5000);
+        if(!audioReady) return;
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(120, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(70, ac.currentTime + 0.14);
+        g.gain.setValueAtTime(0.0001, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.12, ac.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.16);
+        o.connect(g); g.connect(master);
+        o.start(); o.stop(ac.currentTime + 0.18);
+      }
+
+      function whoosh(){
+        if(!audioReady) return;
+
+        const duration = 0.7;
+        const bufferSize = Math.floor(ac.sampleRate * duration);
+        const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+        const data = buffer.getChannelData(0);
+        for(let i=0;i<bufferSize;i++){
+          const t = i / bufferSize;
+          const env = Math.sin(Math.PI * t) ** 1.6;
+          data[i] = (Math.random()*2-1) * env;
+        }
+        const src = ac.createBufferSource();
+        src.buffer = buffer;
+
+        const bp = ac.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(800, ac.currentTime);
+        bp.frequency.exponentialRampToValueAtTime(1800, ac.currentTime + duration);
+
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.30, ac.currentTime + 0.18);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+
+        src.connect(bp); bp.connect(g); g.connect(master);
+        src.start();
+        src.stop(ac.currentTime + duration);
+      }
+
+      // ---------- STATE MACHINE ----------
+      function lockFor(ms){
+        locked = true;
+        setTimeout(()=> locked=false, ms);
+      }
+
+      function goLetter(){
+        setState(3);
+        letterOverlay.setAttribute('aria-hidden', 'false');
+      }
+
+      function goTunnel(){
+        setState(4);
+        letterOverlay.setAttribute('aria-hidden', 'true');
+        startTunnel();
+        whoosh();
+        setTimeout(() => {
+          window.location.href = "/vault/";
+        }, 1350);
       }
 
       function next(){
-        step = Math.min(step + 1, 3);
-        setState(step);
+        if(locked) return;
+
+        initAudio();
+        if(ac.state === "suspended") ac.resume();
+
+        step = Math.min(step + 1, 4);
+
+        if(step === 1){
+          setState(1);
+          clickTick();
+          paperRustle();
+          lockFor(900);
+          return;
+        }
+
+        if(step === 2){
+          setState(2);
+          paperRustle();
+          sealCrack();
+          lockFor(950);
+          return;
+        }
 
         if(step === 3){
-          startTunnel();
-          // Give the tunnel a moment to pull them in, then enter the vault
-          setTimeout(() => {
-            window.location.href = "/vault/";
-          }, 1250);
+          clickTick();
+          paperRustle();
+          goLetter();
+          lockFor(300);
+          return;
+        }
+
+        if(step === 4){
+          clickTick();
+          goTunnel();
+          lockFor(1000);
+          return;
         }
       }
 
-      gate.addEventListener('click', (e) => {
-        e.preventDefault();
-        next();
-      });
-
+      gate.addEventListener('click', (e) => { e.preventDefault(); next(); });
       gate.addEventListener('keydown', (e) => {
         if(e.key === 'Enter' || e.key === ' '){
-          e.preventDefault();
-          next();
+          e.preventDefault(); next();
         }
       });
 
-      // ---- Tunnel animation (real moving depth, not flat spiral) ----
+      enterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(locked) return;
+        if(step < 4) step = 3;
+        next();
+      });
+
+      letterOverlay.addEventListener('click', (e) => {
+        const letter = e.target.closest('.letter');
+        if(letter) return;
+        if(locked) return;
+        if(step < 4) step = 3;
+        next();
+      });
+
+      // ---------- TUNNEL (3D pull + drift + RGB split) ----------
       const canvas = document.getElementById('tunnelCanvas');
       const ctx = canvas.getContext('2d');
 
-      let w, h, dpr, rafId;
+      let w, h, dpr;
       let t = 0;
+      let tunnelRunning = false;
 
       function resize(){
         dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -356,63 +945,65 @@
         canvas.height = Math.floor(h * dpr);
         ctx.setTransform(dpr,0,0,dpr,0,0);
       }
-
       window.addEventListener('resize', resize);
+
+      function drawRings(offsetX, offsetY, color){
+        const cx = w/2 + offsetX;
+        const cy = h/2 + offsetY;
+        const maxR = Math.hypot(w,h) * 0.72;
+
+        const speed = 260;
+        const depth = 56;
+        const base = (t * speed) % 86;
+
+        for(let i=0;i<depth;i++){
+          const z = (i * 86 + base);
+          const p = (z % (depth*86)) / (depth*86);
+          const ease = Math.pow(1 - p, 2.35);
+
+          const r = 26 + ease * maxR * (1.02 + 0.06*Math.sin(t*0.6));
+          const alpha = 0.015 + ease * 0.10;
+
+          const wobX = Math.sin(t*1.45 + i*0.38) * (6 + 14*ease);
+          const wobY = Math.cos(t*1.18 + i*0.44) * (6 + 14*ease);
+
+          ctx.beginPath();
+          ctx.arc(cx + wobX, cy + wobY, r, 0, Math.PI*2);
+          ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
+          ctx.lineWidth = 1 + 3.8*ease;
+          ctx.stroke();
+        }
+      }
 
       function draw(){
         t += 0.016;
 
         ctx.clearRect(0,0,w,h);
 
-        // subtle vignette
-        const vg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/1.15);
-        vg.addColorStop(0, 'rgba(10,10,14,0.15)');
-        vg.addColorStop(0.55, 'rgba(0,0,0,0.78)');
+        const vg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/1.05);
+        vg.addColorStop(0, 'rgba(10,10,14,0.08)');
+        vg.addColorStop(0.58, 'rgba(0,0,0,0.82)');
         vg.addColorStop(1, 'rgba(0,0,0,1)');
         ctx.fillStyle = vg;
         ctx.fillRect(0,0,w,h);
 
-        // moving tunnel rings
-        const cx = w/2, cy = h/2;
-        const maxR = Math.hypot(w,h) * 0.7;
+        const driftX = Math.sin(t*0.65) * 6;
+        const driftY = Math.cos(t*0.55) * 6;
 
-        // We render rings that "advance" toward viewer: spacing changes over time.
-        const speed = 220;               // overall travel speed
-        const depth = 44;                // number of rings
-        const base = (t * speed) % 80;   // phase offset
+        drawRings(driftX-1.2, driftY, {r:255,g:80,b:120});
+        drawRings(driftX+1.2, driftY, {r:90,g:170,b:255});
+        drawRings(driftX, driftY, {r:255,g:255,b:255});
 
-        for(let i=0;i<depth;i++){
-          // nearer rings are brighter and thicker
-          const z = (i * 80 + base); // depth coordinate
-          const p = (z % (depth*80)) / (depth*80); // 0..1
-          const ease = Math.pow(1 - p, 2.2);
-
-          const r = 40 + ease * maxR;
-          const alpha = 0.02 + ease * 0.12;
-
-          // slight wobble so it feels alive (not a flat spiral)
-          const wobX = Math.sin(t*1.6 + i*0.45) * (6 + 10*ease);
-          const wobY = Math.cos(t*1.3 + i*0.50) * (6 + 10*ease);
-
-          ctx.beginPath();
-          ctx.arc(cx + wobX, cy + wobY, r, 0, Math.PI*2);
-          ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-          ctx.lineWidth = 1 + 3.2*ease;
-          ctx.stroke();
-        }
-
-        // faint grain
-        ctx.fillStyle = 'rgba(255,255,255,0.03)';
-        for(let i=0;i<120;i++){
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
+        for(let i=0;i<90;i++){
           const x = Math.random()*w;
           const y = Math.random()*h;
           ctx.fillRect(x,y,1,1);
         }
 
-        rafId = requestAnimationFrame(draw);
+        requestAnimationFrame(draw);
       }
 
-      let tunnelRunning = false;
       function startTunnel(){
         if(tunnelRunning) return;
         tunnelRunning = true;
