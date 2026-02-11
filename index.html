@@ -4,49 +4,353 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Babe</title>
-  <meta name="description" content="I left this here for you." />
-  <meta name="theme-color" content="#050506" />
+  <style>
+    :root{
+      --bg:#07080b;
+      --paper:#e7e2d8;
+      --paper2:#d9d2c6;
+      --ink:#0b0c10;
+      --muted:rgba(10,10,14,.65);
+      --line:rgba(10,10,14,.22);
+      --glow:rgba(255,255,255,.12);
+      --algiz:rgba(10,10,14,.12);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 700px at 50% 35%, rgba(255,255,255,.06), transparent 55%),
+                  radial-gradient(900px 600px at 65% 70%, rgba(255,255,255,.04), transparent 60%),
+                  var(--bg);
+      color:#fff;
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      overflow:hidden;
+    }
 
-  <link rel="stylesheet" href="/assets/css/base.css">
-  <link rel="stylesheet" href="/assets/css/gate.css">
+    /* Soft film grain */
+    body::before{
+      content:"";
+      position:fixed; inset:-40%;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity:.10;
+      pointer-events:none;
+      transform:rotate(3deg);
+    }
+
+    .wrap{
+      height:100%;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    .stage{
+      width:min(720px, 92vw);
+      aspect-ratio: 16 / 10;
+      position:relative;
+      display:grid;
+      place-items:center;
+    }
+
+    /* Envelope container */
+    .envelope{
+      width:min(560px, 88vw);
+      aspect-ratio: 5 / 3.1;
+      position:relative;
+      transform-style:preserve-3d;
+      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+      filter: drop-shadow(0 18px 30px rgba(0,0,0,.55));
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Flip state (open side down -> flips over) */
+    .envelope.flipped{
+      transform: rotateX(180deg);
+    }
+
+    /* The paper body */
+    .env-body{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(120px 80px at 52% 46%, rgba(255,255,255,.35), transparent 55%),
+        linear-gradient(180deg, var(--paper), var(--paper2));
+      border: 1px solid rgba(0,0,0,.25);
+      border-radius: 14px;
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+
+    /* Embossed Algiz watermark (center, “no ink”) */
+    .env-body::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(220px 220px at 50% 52%, rgba(255,255,255,.22), transparent 55%),
+        radial-gradient(180px 180px at 50% 52%, rgba(0,0,0,.08), transparent 62%);
+      mask-image: radial-gradient(260px 260px at 50% 52%, #000 40%, transparent 65%);
+      pointer-events:none;
+    }
+    .algiz{
+      position:absolute;
+      left:50%; top:52%;
+      width:160px; height:160px;
+      transform: translate(-50%,-50%);
+      opacity:.22;
+      filter: blur(.2px);
+      pointer-events:none;
+    }
+    .algiz path{
+      stroke: rgba(10,10,14,.18);
+      stroke-width: 10;
+      fill:none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,.18));
+    }
+
+    /* Envelope flap */
+    .flap{
+      position:absolute;
+      left:0; right:0;
+      top:0;
+      height:60%;
+      background: linear-gradient(180deg, rgba(255,255,255,.25), transparent 55%),
+                  linear-gradient(180deg, var(--paper), var(--paper2));
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: 50% 0%;
+      transform: rotateX(0deg);
+      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+      border-top-left-radius:14px;
+      border-top-right-radius:14px;
+      border: 1px solid rgba(0,0,0,.25);
+      border-bottom:none;
+      z-index:4;
+      backface-visibility:hidden;
+    }
+
+    /* When “opened” */
+    .envelope.opened .flap{
+      transform: rotateX(-165deg);
+    }
+
+    /* Inner letter area */
+    .letter{
+      position:absolute;
+      left:18px; right:18px;
+      top:18px; bottom:18px;
+      border-radius: 12px;
+      border: 1px dashed rgba(0,0,0,.22);
+      background: rgba(255,255,255,.22);
+      display:grid;
+      align-content:start;
+      gap:10px;
+      padding:18px 18px 14px;
+      z-index:2;
+    }
+
+    .tiny{
+      font-size:14px;
+      color: rgba(0,0,0,.55);
+      letter-spacing:.02em;
+    }
+
+    .title{
+      font-size:54px;
+      line-height:1;
+      margin:0;
+      color: rgba(0,0,0,.92);
+    }
+
+    .msg{
+      margin-top:6px;
+      display:inline-block;
+      padding:10px 12px;
+      border: 1px solid rgba(0,0,0,.35);
+      border-radius: 10px;
+      color: rgba(0,0,0,.92);
+      background: rgba(255,255,255,.35);
+      max-width: 36ch;
+      font-size:18px;
+    }
+
+    .sub{
+      color: rgba(0,0,0,.70);
+      font-size:16px;
+      margin:0;
+    }
+
+    /* Hint text below */
+    .hint{
+      margin-top:18px;
+      text-align:center;
+      color: rgba(255,255,255,.72);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    /* Fade-to-black transport */
+    .veil{
+      position:fixed; inset:0;
+      background: radial-gradient(600px 380px at 50% 40%, rgba(255,255,255,.08), transparent 60%),
+                  #000;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 900ms ease;
+      z-index:50;
+    }
+    .veil.on{ opacity:1; }
+
+    /* Tunnel shimmer */
+    .tunnel{
+      position:fixed; inset:-20%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.20), transparent 45%),
+                  repeating-radial-gradient(circle at 50% 50%,
+                    rgba(255,255,255,.06) 0px,
+                    rgba(255,255,255,.06) 2px,
+                    transparent 8px,
+                    transparent 18px);
+      opacity:0;
+      transform: scale(.9);
+      filter: blur(.2px);
+      pointer-events:none;
+      transition: opacity 900ms ease, transform 900ms ease;
+      z-index:55;
+      mix-blend-mode: screen;
+    }
+    .tunnel.on{
+      opacity:.35;
+      transform: scale(1.05);
+      animation: drift 1200ms ease-in-out infinite alternate;
+    }
+    @keyframes drift{
+      from{ transform: scale(1.03) translateY(0px); }
+      to{ transform: scale(1.07) translateY(10px); }
+    }
+
+    /* 3rd visit message */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:26px;
+      transform: translateX(-50%);
+      padding:10px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px;
+      background: rgba(10,10,14,.55);
+      color: rgba(255,255,255,.86);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 13px;
+      opacity:0;
+      transition: opacity 500ms ease;
+      z-index:80;
+      pointer-events:none;
+    }
+    .toast.on{ opacity:1; }
+
+    /* Mobile friendliness */
+    @media (max-width:520px){
+      .title{ font-size:44px; }
+      .msg{ font-size:16px; }
+    }
+  </style>
 </head>
 
-<body class="bg-void gate-body">
-  <div class="grain" aria-hidden="true"></div>
-  <div class="vignette" aria-hidden="true"></div>
+<body>
+  <div class="wrap">
+    <div class="stage">
+      <div id="env" class="envelope" role="button" aria-label="Open the envelope" tabindex="0">
+        <div class="env-body"></div>
 
-  <main class="gate">
-    <header class="gate-head">
-      <div class="gate-kicker">for</div>
-      <h1 class="gate-title">Babe</h1>
-      <div id="returnMsg" class="gate-return" hidden>awh, nice to see you again. i’m glad you came.</div>
-    </header>
+        <!-- Embossed Algiz watermark -->
+        <svg class="algiz" viewBox="0 0 200 200" aria-hidden="true">
+          <!-- Algiz-like shape -->
+          <path d="M100 30 L100 170 M100 70 L55 40 M100 70 L145 40" />
+        </svg>
 
-    <section class="stage" aria-label="Envelope gate">
-      <button id="envelope" class="envelope" type="button" aria-label="Open the envelope">
-        <span class="stamp" aria-hidden="true"></span>
+        <div class="letter" aria-hidden="true">
+          <div class="tiny">for</div>
+          <h1 class="title">Babe</h1>
+          <div id="msg" class="msg">I left this here for you.</div>
+          <p class="sub" id="sub">click again.</p>
+        </div>
 
-        <span class="env-shadow" aria-hidden="true"></span>
-        <span class="env-back" aria-hidden="true"></span>
-        <span class="env-front" aria-hidden="true"></span>
-        <span class="env-flap" aria-hidden="true"></span>
+        <div class="flap"></div>
+      </div>
 
-        <span id="note" class="note" aria-live="polite">
-          <span class="note-text">I left this here for you.</span>
-          <span class="note-sub">click again</span>
-        </span>
+      <div class="hint">tap / click • three steps • enter gently</div>
+    </div>
+  </div>
 
-        <span class="hint">click</span>
-      </button>
-    </section>
+  <div id="veil" class="veil"></div>
+  <div id="tunnel" class="tunnel"></div>
+  <div id="toast" class="toast">awh, nice to see you again. i’m glad you came.</div>
 
-    <footer class="gate-foot">
-      <span class="foot-whisper">enter gently.</span>
-    </footer>
-  </main>
+  <script>
+    // Visit count (localStorage)
+    (function(){
+      const key = "vault_visits";
+      let v = parseInt(localStorage.getItem(key) || "0", 10);
+      v += 1;
+      localStorage.setItem(key, String(v));
+      if (v >= 3){
+        const t = document.getElementById("toast");
+        t.classList.add("on");
+        setTimeout(()=>t.classList.remove("on"), 4200);
+      }
+    })();
 
-  <div id="fade" class="fade"></div>
+    const env = document.getElementById("env");
+    const msg = document.getElementById("msg");
+    const sub = document.getElementById("sub");
+    const veil = document.getElementById("veil");
+    const tunnel = document.getElementById("tunnel");
 
-  <script src="/assets/js/gate.js"></script>
+    let step = 0;
+    // step 0: envelope is "open side down" (conceptually)
+    // step 1: flip over
+    // step 2: open flap + reveal message
+    // step 3: transport + redirect to /vault/
+
+    function advance(){
+      step++;
+
+      if (step === 1){
+        env.classList.add("flipped");
+        msg.textContent = "I left this here for you.";
+        sub.textContent = "click again.";
+        return;
+      }
+
+      if (step === 2){
+        env.classList.add("opened");
+        msg.textContent = "I left this here for you.";
+        sub.textContent = "enter gently.";
+        return;
+      }
+
+      if (step >= 3){
+        // Transport
+        veil.classList.add("on");
+        tunnel.classList.add("on");
+        setTimeout(()=>{
+          // Send them into the vault world
+          window.location.href = "/vault/";
+        }, 900);
+      }
+    }
+
+    env.addEventListener("click", advance);
+    env.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        advance();
+      }
+    });
+  </script>
 </body>
 </html>
